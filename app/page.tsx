@@ -52,7 +52,7 @@ function PlanBadge({ isPro, count }: { isPro: boolean; count: number }) {
   );
 }
 
-function ProUpgradeCard({ onUpgrade, loading }: { onUpgrade: () => void; loading: boolean }) {
+function ProUpgradeCard({ onUpgrade, loading }: { onUpgrade: (plan: "monthly" | "annual") => void; loading: boolean }) {
   return (
     <div className="bg-gradient-to-br from-violet-600 to-purple-700 rounded-3xl p-6 text-white shadow-xl mb-6">
       <div className="flex items-start justify-between gap-4">
@@ -68,23 +68,22 @@ function ProUpgradeCard({ onUpgrade, loading }: { onUpgrade: () => void; loading
             <span className="text-3xl font-extrabold">7€</span>
             <span className="text-violet-300">/mois</span>
           </div>
-          <button
-            onClick={onUpgrade}
-            disabled={loading}
-            className="px-6 py-2.5 bg-white text-violet-700 font-bold rounded-xl hover:bg-violet-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Redirection…
-              </>
-            ) : (
-              <>⚡ Passer Pro — 7€/mois</>
-            )}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={() => onUpgrade("monthly")}
+              disabled={loading}
+              className="px-4 py-2.5 bg-white/20 border border-white/40 text-white font-semibold rounded-xl hover:bg-white/30 transition-colors disabled:opacity-60 text-sm"
+            >
+              7€/mois
+            </button>
+            <button
+              onClick={() => onUpgrade("annual")}
+              disabled={loading}
+              className="px-4 py-2.5 bg-white text-violet-700 font-bold rounded-xl hover:bg-violet-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+            >
+              {loading ? "Redirection…" : <>⚡ 50€/an — économisez 20€</>}
+            </button>
+          </div>
         </div>
         <div className="text-6xl opacity-20 flex-shrink-0">🚀</div>
       </div>
@@ -221,7 +220,7 @@ function PricingSection({
   loading,
 }: {
   isPro: boolean;
-  onUpgrade: () => void;
+  onUpgrade: (plan: "monthly" | "annual") => void;
   loading: boolean;
 }) {
   return (
@@ -307,23 +306,40 @@ function PricingSection({
               ⚡ Plan actif
             </div>
           ) : (
-            <button
-              onClick={onUpgrade}
-              disabled={loading}
-              className="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Redirection vers Stripe…
-                </>
-              ) : (
-                <>⚡ Passer Pro — 7€/mois</>
-              )}
-            </button>
+            <div className="flex flex-col gap-2">
+              {/* Bouton annuel — mis en avant */}
+              <button
+                onClick={() => onUpgrade("annual")}
+                disabled={loading}
+                className="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Redirection…
+                  </>
+                ) : (
+                  <>
+                    ⚡ Annuel — 50€/an
+                    <span className="bg-white/25 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      économisez 20€
+                    </span>
+                  </>
+                )}
+              </button>
+
+              {/* Bouton mensuel — secondaire */}
+              <button
+                onClick={() => onUpgrade("monthly")}
+                disabled={loading}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold border-2 border-violet-300 text-violet-600 hover:bg-violet-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                Mensuel — 7€/mois
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -369,10 +385,14 @@ export default function Home() {
     }
   }, []);
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (plan: "monthly" | "annual" = "monthly") => {
     setCheckoutLoading(true);
     try {
-      const res = await fetch("/api/stripe/checkout", { method: "POST" });
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
@@ -548,7 +568,7 @@ export default function Home() {
 
         {/* Pro upgrade card when limit reached */}
         {limitReached && (
-          <ProUpgradeCard onUpgrade={handleUpgrade} loading={checkoutLoading} />
+          <ProUpgradeCard onUpgrade={(plan) => handleUpgrade(plan)} loading={checkoutLoading} />
         )}
 
         {/* Input Card */}
@@ -605,7 +625,7 @@ export default function Home() {
           )}
 
           <button
-            onClick={limitReached ? handleUpgrade : handleGenerate}
+            onClick={limitReached ? () => handleUpgrade("monthly") : handleGenerate}
             disabled={loading || checkoutLoading}
             className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${
               loading || checkoutLoading

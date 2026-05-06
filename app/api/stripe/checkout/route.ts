@@ -1,13 +1,21 @@
 import Stripe from "stripe";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json({ error: "STRIPE_SECRET_KEY manquant." }, { status: 500 });
     }
-    if (!process.env.STRIPE_PRICE_ID) {
-      return NextResponse.json({ error: "STRIPE_PRICE_ID manquant." }, { status: 500 });
+
+    const { plan } = await request.json().catch(() => ({ plan: "monthly" }));
+    const isAnnual = plan === "annual";
+
+    const priceId = isAnnual
+      ? process.env.STRIPE_ANNUAL_PRICE_ID
+      : process.env.STRIPE_PRICE_ID;
+
+    if (!priceId) {
+      return NextResponse.json({ error: "Price ID manquant." }, { status: 500 });
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -16,12 +24,7 @@ export async function POST() {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
-      line_items: [
-        {
-          price: process.env.STRIPE_PRICE_ID,
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/?canceled=true`,
       locale: "fr",
