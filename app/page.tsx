@@ -223,26 +223,40 @@ function PricingSection({
   onUpgrade: (plan: "monthly" | "annual") => void;
   loading: boolean;
 }) {
+  const features = [
+    "Fiches illimitées",
+    "Points clés + Définitions + QCM",
+    "Téléchargement PDF",
+    "Accès prioritaire à Claude AI",
+    "Support prioritaire",
+  ];
+
+  const Spinner = () => (
+    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+
   return (
     <div>
-      <h2 className="text-center text-2xl font-extrabold text-gray-900 mb-2">
-        Nos plans
-      </h2>
-      <p className="text-center text-gray-500 text-sm mb-6">
+      <h2 className="text-center text-2xl font-extrabold text-gray-900 mb-2">Nos plans</h2>
+      <p className="text-center text-gray-500 text-sm mb-8">
         Commence gratuitement, passe Pro quand tu es prêt.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Card Gratuit */}
-        <div className="relative rounded-2xl border-2 border-gray-200 bg-white p-6 flex flex-col">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Gratuit</p>
-          <div className="flex items-baseline gap-1 mb-1">
-            <span className="text-4xl font-extrabold text-gray-800">0€</span>
-            <span className="text-gray-400 text-sm font-medium">/mois</span>
-          </div>
-          <p className="text-xs text-gray-400 mb-5">Pour découvrir l&apos;outil</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-          <ul className="space-y-3 mb-8 flex-1">
+        {/* ── Card Gratuit ── */}
+        <div className="relative rounded-2xl border-2 border-gray-200 bg-white p-5 flex flex-col">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Gratuit</p>
+          <div className="flex items-baseline gap-1 mb-1">
+            <span className="text-3xl font-extrabold text-gray-800">0€</span>
+            <span className="text-gray-400 text-xs">/mois</span>
+          </div>
+          <p className="text-xs text-gray-400 mb-4">Pour découvrir l&apos;outil</p>
+
+          <ul className="space-y-2.5 mb-6 flex-1">
             {[
               { ok: true,  text: "3 fiches par mois" },
               { ok: true,  text: "Génération de base" },
@@ -251,10 +265,8 @@ function PricingSection({
               { ok: false, text: "Téléchargement PDF" },
               { ok: false, text: "Support prioritaire" },
             ].map((item, i) => (
-              <li key={i} className="flex items-center gap-2.5 text-sm">
-                <span className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
-                  item.ok ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"
-                }`}>
+              <li key={i} className="flex items-center gap-2 text-sm">
+                <span className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${item.ok ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-300"}`}>
                   {item.ok ? "✓" : "✕"}
                 </span>
                 <span className={item.ok ? "text-gray-700" : "text-gray-400"}>{item.text}</span>
@@ -262,86 +274,89 @@ function PricingSection({
             ))}
           </ul>
 
-          <div className="w-full py-3 rounded-xl text-center text-sm font-semibold bg-gray-100 text-gray-400 cursor-default select-none">
+          <div className="w-full py-2.5 rounded-xl text-center text-sm font-semibold bg-gray-100 text-gray-400 cursor-default select-none">
             Plan actuel
           </div>
         </div>
 
-        {/* Card Pro */}
-        <div className="relative rounded-2xl border-2 border-violet-500 bg-gradient-to-br from-violet-50 via-white to-purple-50 p-6 flex flex-col shadow-xl">
-          {/* Badge Recommandé */}
+        {/* ── Card Pro Mensuel ── */}
+        <div className="relative rounded-2xl border-2 border-violet-300 bg-white p-5 flex flex-col shadow-md">
+          <p className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-2">Pro Mensuel</p>
+          <div className="flex items-baseline gap-1 mb-1">
+            <span className="text-3xl font-extrabold text-gray-900">7€</span>
+            <span className="text-gray-500 text-xs">/mois</span>
+          </div>
+          <p className="text-xs text-violet-400 mb-4">Flexible, sans engagement</p>
+
+          <ul className="space-y-2.5 mb-6 flex-1">
+            {features.map((text, i) => (
+              <li key={i} className="flex items-center gap-2 text-sm">
+                <span className="flex-shrink-0 w-4 h-4 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-bold">✓</span>
+                <span className="text-gray-700">{text}</span>
+              </li>
+            ))}
+          </ul>
+
+          {isPro ? (
+            <div className="w-full py-2.5 rounded-xl text-center text-sm font-bold bg-violet-100 text-violet-600 cursor-default">
+              ⚡ Plan actif
+            </div>
+          ) : (
+            <button
+              onClick={() => onUpgrade("monthly")}
+              disabled={loading}
+              className="w-full py-2.5 rounded-xl text-sm font-bold border-2 border-violet-500 text-violet-600 hover:bg-violet-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? <span className="flex items-center justify-center gap-2"><Spinner />Redirection…</span> : "Choisir Mensuel"}
+            </button>
+          )}
+        </div>
+
+        {/* ── Card Pro Annuel ── */}
+        <div className="relative rounded-2xl border-2 border-violet-500 bg-gradient-to-br from-violet-50 via-white to-purple-50 p-5 flex flex-col shadow-xl">
+          {/* Badge */}
           <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
             <span className="bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
               ⭐ Recommandé
             </span>
           </div>
 
-          <p className="text-xs font-bold text-violet-500 uppercase tracking-widest mb-3">Pro</p>
-          <div className="flex items-baseline gap-1 mb-1">
-            <span className="text-4xl font-extrabold text-gray-900">7€</span>
-            <span className="text-gray-500 text-sm font-medium">/mois</span>
+          <p className="text-xs font-bold text-violet-500 uppercase tracking-widest mb-2">Pro Annuel</p>
+          <div className="flex items-baseline gap-1 mb-0.5">
+            <span className="text-3xl font-extrabold text-gray-900">50€</span>
+            <span className="text-gray-500 text-xs">/an</span>
           </div>
-          <p className="text-xs text-violet-400 mb-5">Tout ce qu&apos;il faut pour réviser</p>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-xs text-gray-400 line-through">84€</span>
+            <span className="text-xs font-bold text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+              économisez 20€
+            </span>
+          </div>
 
-          <ul className="space-y-3 mb-8 flex-1">
-            {[
-              "Fiches illimitées",
-              "Génération avancée avec Claude AI",
-              "Points clés + Définitions + QCM",
-              "Téléchargement PDF",
-              "Accès prioritaire",
-              "Support prioritaire",
-            ].map((text, i) => (
-              <li key={i} className="flex items-center gap-2.5 text-sm">
-                <span className="flex-shrink-0 w-4 h-4 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-bold">
-                  ✓
-                </span>
+          <ul className="space-y-2.5 mb-6 flex-1">
+            {features.map((text, i) => (
+              <li key={i} className="flex items-center gap-2 text-sm">
+                <span className="flex-shrink-0 w-4 h-4 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-bold">✓</span>
                 <span className="text-gray-700 font-medium">{text}</span>
               </li>
             ))}
           </ul>
 
           {isPro ? (
-            <div className="w-full py-3 rounded-xl text-center text-sm font-bold bg-violet-600 text-white">
+            <div className="w-full py-2.5 rounded-xl text-center text-sm font-bold bg-violet-600 text-white">
               ⚡ Plan actif
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
-              {/* Bouton annuel — mis en avant */}
-              <button
-                onClick={() => onUpgrade("annual")}
-                disabled={loading}
-                className="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Redirection…
-                  </>
-                ) : (
-                  <>
-                    ⚡ Annuel — 50€/an
-                    <span className="bg-white/25 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                      économisez 20€
-                    </span>
-                  </>
-                )}
-              </button>
-
-              {/* Bouton mensuel — secondaire */}
-              <button
-                onClick={() => onUpgrade("monthly")}
-                disabled={loading}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold border-2 border-violet-300 text-violet-600 hover:bg-violet-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                Mensuel — 7€/mois
-              </button>
-            </div>
+            <button
+              onClick={() => onUpgrade("annual")}
+              disabled={loading}
+              className="w-full py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? <><Spinner />Redirection…</> : "⚡ Choisir Annuel — 50€/an"}
+            </button>
           )}
         </div>
+
       </div>
     </div>
   );
