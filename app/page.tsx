@@ -22,8 +22,18 @@ interface Fiche {
 
 const MAX_FREE_FICHES = 3;
 const STORAGE_KEY = "fiche_count";
+const PRO_STORAGE_KEY = "fiche_pro";
 
-function CounterBadge({ count }: { count: number }) {
+function PlanBadge({ isPro, count }: { isPro: boolean; count: number }) {
+  if (isPro) {
+    return (
+      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium bg-gradient-to-r from-violet-100 to-purple-100 text-violet-800 border-violet-300">
+        <span className="text-base">⚡</span>
+        Plan Pro — fiches illimitées
+      </div>
+    );
+  }
+
   const remaining = MAX_FREE_FICHES - count;
   const color =
     remaining === 0
@@ -38,6 +48,46 @@ function CounterBadge({ count }: { count: number }) {
       {remaining > 0
         ? `${remaining} fiche${remaining > 1 ? "s" : ""} gratuite${remaining > 1 ? "s" : ""} restante${remaining > 1 ? "s" : ""}`
         : "Limite atteinte"}
+    </div>
+  );
+}
+
+function ProUpgradeCard({ onUpgrade, loading }: { onUpgrade: () => void; loading: boolean }) {
+  return (
+    <div className="bg-gradient-to-br from-violet-600 to-purple-700 rounded-3xl p-6 text-white shadow-xl mb-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-violet-200 text-sm font-medium mb-1">Tu as utilisé tes 3 fiches gratuites</p>
+          <h3 className="text-xl font-extrabold mb-2">Passe au Plan Pro</h3>
+          <ul className="space-y-1 text-sm text-violet-100 mb-4">
+            <li>✓ Fiches illimitées</li>
+            <li>✓ Accès prioritaire à Claude</li>
+            <li>✓ Support dédié</li>
+          </ul>
+          <div className="flex items-baseline gap-1 mb-4">
+            <span className="text-3xl font-extrabold">7€</span>
+            <span className="text-violet-300">/mois</span>
+          </div>
+          <button
+            onClick={onUpgrade}
+            disabled={loading}
+            className="px-6 py-2.5 bg-white text-violet-700 font-bold rounded-xl hover:bg-violet-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {loading ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Redirection…
+              </>
+            ) : (
+              <>⚡ Passer Pro — 7€/mois</>
+            )}
+          </button>
+        </div>
+        <div className="text-6xl opacity-20 flex-shrink-0">🚀</div>
+      </div>
     </div>
   );
 }
@@ -60,7 +110,6 @@ function FicheDisplay({
 
   return (
     <div id="fiche-content" className="space-y-6">
-      {/* Header */}
       <div className="bg-gradient-to-r from-violet-600 to-purple-600 rounded-2xl p-6 text-white">
         <div className="flex items-center gap-2 text-violet-200 text-sm mb-2">
           <span>📚</span>
@@ -69,7 +118,6 @@ function FicheDisplay({
         <h2 className="text-2xl font-bold">{fiche.titre}</h2>
       </div>
 
-      {/* Points clés */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-violet-100">
         <h3 className="text-lg font-bold text-violet-800 mb-4 flex items-center gap-2">
           <span className="text-2xl">⚡</span> Points clés
@@ -86,7 +134,6 @@ function FicheDisplay({
         </ul>
       </div>
 
-      {/* Définitions */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-violet-100">
         <h3 className="text-lg font-bold text-violet-800 mb-4 flex items-center gap-2">
           <span className="text-2xl">📖</span> Définitions importantes
@@ -101,7 +148,6 @@ function FicheDisplay({
         </div>
       </div>
 
-      {/* QCM */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-violet-100">
         <h3 className="text-lg font-bold text-violet-800 mb-4 flex items-center gap-2">
           <span className="text-2xl">🧠</span> QCM d&apos;entraînement
@@ -141,12 +187,8 @@ function FicheDisplay({
                         className={btnClass}
                         disabled={answered}
                       >
-                        {answered && letter === q.reponse && (
-                          <span className="mr-1">✅</span>
-                        )}
-                        {answered && letter === selected && letter !== q.reponse && (
-                          <span className="mr-1">❌</span>
-                        )}
+                        {answered && letter === q.reponse && <span className="mr-1">✅</span>}
+                        {answered && letter === selected && letter !== q.reponse && <span className="mr-1">❌</span>}
                         {option}
                       </button>
                     );
@@ -163,13 +205,128 @@ function FicheDisplay({
         </div>
       </div>
 
-      {/* Download button */}
       <button
         onClick={onDownload}
         className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold text-lg hover:from-violet-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
       >
         <span>⬇️</span> Télécharger en PDF
       </button>
+    </div>
+  );
+}
+
+function PricingSection({
+  isPro,
+  onUpgrade,
+  loading,
+}: {
+  isPro: boolean;
+  onUpgrade: () => void;
+  loading: boolean;
+}) {
+  return (
+    <div>
+      <h2 className="text-center text-2xl font-extrabold text-gray-900 mb-2">
+        Nos plans
+      </h2>
+      <p className="text-center text-gray-500 text-sm mb-6">
+        Commence gratuitement, passe Pro quand tu es prêt.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Card Gratuit */}
+        <div className="relative rounded-2xl border-2 border-gray-200 bg-white p-6 flex flex-col">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Gratuit</p>
+          <div className="flex items-baseline gap-1 mb-1">
+            <span className="text-4xl font-extrabold text-gray-800">0€</span>
+            <span className="text-gray-400 text-sm font-medium">/mois</span>
+          </div>
+          <p className="text-xs text-gray-400 mb-5">Pour découvrir l&apos;outil</p>
+
+          <ul className="space-y-3 mb-8 flex-1">
+            {[
+              { ok: true,  text: "3 fiches par mois" },
+              { ok: true,  text: "Génération de base" },
+              { ok: true,  text: "Points clés + Définitions + QCM" },
+              { ok: false, text: "Fiches illimitées" },
+              { ok: false, text: "Téléchargement PDF" },
+              { ok: false, text: "Support prioritaire" },
+            ].map((item, i) => (
+              <li key={i} className="flex items-center gap-2.5 text-sm">
+                <span className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
+                  item.ok ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"
+                }`}>
+                  {item.ok ? "✓" : "✕"}
+                </span>
+                <span className={item.ok ? "text-gray-700" : "text-gray-400"}>{item.text}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="w-full py-3 rounded-xl text-center text-sm font-semibold bg-gray-100 text-gray-400 cursor-default select-none">
+            Plan actuel
+          </div>
+        </div>
+
+        {/* Card Pro */}
+        <div className="relative rounded-2xl border-2 border-violet-500 bg-gradient-to-br from-violet-50 via-white to-purple-50 p-6 flex flex-col shadow-xl">
+          {/* Badge Recommandé */}
+          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <span className="bg-gradient-to-r from-violet-600 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
+              ⭐ Recommandé
+            </span>
+          </div>
+
+          <p className="text-xs font-bold text-violet-500 uppercase tracking-widest mb-3">Pro</p>
+          <div className="flex items-baseline gap-1 mb-1">
+            <span className="text-4xl font-extrabold text-gray-900">7€</span>
+            <span className="text-gray-500 text-sm font-medium">/mois</span>
+          </div>
+          <p className="text-xs text-violet-400 mb-5">Tout ce qu&apos;il faut pour réviser</p>
+
+          <ul className="space-y-3 mb-8 flex-1">
+            {[
+              "Fiches illimitées",
+              "Génération avancée avec Claude AI",
+              "Points clés + Définitions + QCM",
+              "Téléchargement PDF",
+              "Accès prioritaire",
+              "Support prioritaire",
+            ].map((text, i) => (
+              <li key={i} className="flex items-center gap-2.5 text-sm">
+                <span className="flex-shrink-0 w-4 h-4 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-xs font-bold">
+                  ✓
+                </span>
+                <span className="text-gray-700 font-medium">{text}</span>
+              </li>
+            ))}
+          </ul>
+
+          {isPro ? (
+            <div className="w-full py-3 rounded-xl text-center text-sm font-bold bg-violet-600 text-white">
+              ⚡ Plan actif
+            </div>
+          ) : (
+            <button
+              onClick={onUpgrade}
+              disabled={loading}
+              className="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Redirection vers Stripe…
+                </>
+              ) : (
+                <>⚡ Passer Pro — 7€/mois</>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -189,8 +346,10 @@ export default function Home() {
   const [courseText, setCourseText] = useState("");
   const [fiche, setFiche] = useState<Fiche | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState("");
   const [ficheCount, setFicheCount] = useState(0);
+  const [isPro, setIsPro] = useState(false);
   const [pdfFileName, setPdfFileName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ficheRef = useRef<HTMLDivElement>(null);
@@ -198,7 +357,34 @@ export default function Home() {
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) setFicheCount(parseInt(stored, 10));
+
+    const proData = localStorage.getItem(PRO_STORAGE_KEY);
+    if (proData) {
+      try {
+        const parsed = JSON.parse(proData);
+        if (parsed.isPro) setIsPro(true);
+      } catch {
+        // invalid data, ignore
+      }
+    }
   }, []);
+
+  const handleUpgrade = async () => {
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError("Impossible de lancer le paiement. Réessaie.");
+        setCheckoutLoading(false);
+      }
+    } catch {
+      setError("Erreur lors de la connexion à Stripe.");
+      setCheckoutLoading(false);
+    }
+  };
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -219,7 +405,7 @@ export default function Home() {
       if (data.text) {
         setCourseText(data.text);
       } else {
-        setError("Impossible de lire ce PDF.");
+        setError(data.error || "Impossible de lire ce PDF.");
       }
     } catch {
       setError("Erreur lors de la lecture du PDF.");
@@ -227,8 +413,8 @@ export default function Home() {
   };
 
   const handleGenerate = async () => {
-    if (ficheCount >= MAX_FREE_FICHES) {
-      setError("Tu as utilisé tes 3 fiches gratuites. Reviens demain !");
+    if (!isPro && ficheCount >= MAX_FREE_FICHES) {
+      setError("Tu as utilisé tes 3 fiches gratuites.");
       return;
     }
     if (!courseText.trim()) {
@@ -254,9 +440,12 @@ export default function Home() {
       }
 
       setFiche(data.fiche);
-      const newCount = ficheCount + 1;
-      setFicheCount(newCount);
-      localStorage.setItem(STORAGE_KEY, String(newCount));
+
+      if (!isPro) {
+        const newCount = ficheCount + 1;
+        setFicheCount(newCount);
+        localStorage.setItem(STORAGE_KEY, String(newCount));
+      }
 
       setTimeout(() => {
         ficheRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -303,7 +492,6 @@ export default function Home() {
       y += 10;
     };
 
-    // Title
     doc.setFillColor(124, 58, 237);
     doc.roundedRect(margin, y - 8, contentW, 20, 3, 3, "F");
     doc.setFontSize(16);
@@ -312,13 +500,11 @@ export default function Home() {
     doc.text(fiche.titre, margin + 5, y + 5);
     y += 20;
 
-    // Points clés
     addSection("Points clés", "⚡");
     fiche.points_cles.forEach((p, i) => {
       addText(`${i + 1}. ${p}`, 10, [50, 50, 50]);
     });
 
-    // Définitions
     addSection("Définitions importantes", "📖");
     fiche.definitions.forEach((def) => {
       addText(`${def.terme}`, 10, [109, 40, 217], true);
@@ -326,7 +512,6 @@ export default function Home() {
       y += 2;
     });
 
-    // QCM
     addSection("QCM d'entraînement", "🧠");
     fiche.qcm.forEach((q, i) => {
       addText(`Q${i + 1}. ${q.question}`, 10, [30, 30, 30], true);
@@ -340,7 +525,7 @@ export default function Home() {
     doc.save(`fiche-${fiche.titre.toLowerCase().replace(/\s+/g, "-")}.pdf`);
   };
 
-  const remaining = MAX_FREE_FICHES - ficheCount;
+  const limitReached = !isPro && ficheCount >= MAX_FREE_FICHES;
 
   return (
     <div className="min-h-screen py-10 px-4">
@@ -357,9 +542,14 @@ export default function Home() {
             Colle ton cours → reçois ta fiche en 30 secondes
           </p>
           <div className="mt-3 flex justify-center">
-            <CounterBadge count={ficheCount} />
+            <PlanBadge isPro={isPro} count={ficheCount} />
           </div>
         </div>
+
+        {/* Pro upgrade card when limit reached */}
+        {limitReached && (
+          <ProUpgradeCard onUpgrade={handleUpgrade} loading={checkoutLoading} />
+        )}
 
         {/* Input Card */}
         <div className="bg-white rounded-3xl shadow-xl border border-violet-100 p-6 mb-6">
@@ -397,9 +587,7 @@ export default function Home() {
           />
 
           <div className="flex items-center justify-between mt-1 mb-4">
-            <span className="text-xs text-gray-400">
-              {courseText.length} caractères
-            </span>
+            <span className="text-xs text-gray-400">{courseText.length} caractères</span>
             {courseText && (
               <button
                 onClick={() => { setCourseText(""); setPdfFileName(""); }}
@@ -417,11 +605,13 @@ export default function Home() {
           )}
 
           <button
-            onClick={handleGenerate}
-            disabled={loading || remaining === 0}
+            onClick={limitReached ? handleUpgrade : handleGenerate}
+            disabled={loading || checkoutLoading}
             className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${
-              loading || remaining === 0
+              loading || checkoutLoading
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : limitReached
+                ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-purple-700 active:scale-[0.98]"
                 : "bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-purple-700 active:scale-[0.98]"
             }`}
           >
@@ -433,21 +623,28 @@ export default function Home() {
                 </svg>
                 Génération en cours…
               </>
-            ) : remaining === 0 ? (
-              "🔒 Limite atteinte"
+            ) : checkoutLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Redirection vers Stripe…
+              </>
+            ) : limitReached ? (
+              <>⚡ Passer Pro — 7€/mois</>
             ) : (
               <>✨ Générer ma fiche</>
             )}
           </button>
 
-          {remaining > 0 && (
+          {!isPro && !limitReached && (
             <p className="text-center text-xs text-gray-400 mt-3">
-              {remaining} génération{remaining > 1 ? "s" : ""} gratuite{remaining > 1 ? "s" : ""} restante{remaining > 1 ? "s" : ""}
+              {MAX_FREE_FICHES - ficheCount} génération{MAX_FREE_FICHES - ficheCount > 1 ? "s" : ""} gratuite{MAX_FREE_FICHES - ficheCount > 1 ? "s" : ""} restante{MAX_FREE_FICHES - ficheCount > 1 ? "s" : ""}
             </p>
           )}
         </div>
 
-        {/* Fiche Output */}
         {loading && <LoadingSkeleton />}
 
         {fiche && !loading && (
@@ -456,9 +653,13 @@ export default function Home() {
           </div>
         )}
 
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-400 mt-8">
-          Propulsé par Claude AI · Gratuit pour 3 fiches
+        {/* Pricing Section */}
+        <div className="mt-12">
+          <PricingSection isPro={isPro} onUpgrade={handleUpgrade} loading={checkoutLoading} />
+        </div>
+
+        <p className="text-center text-xs text-gray-400 mt-4">
+          {isPro ? "Plan Pro actif · Fiches illimitées" : "Gratuit · 3 fiches · Passe Pro pour illimité"}
         </p>
       </div>
     </div>
